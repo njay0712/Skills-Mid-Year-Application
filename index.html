@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Skills Training Application Portal</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-hover: #0369a1;
+            --secondary: #0f172a;
+            --bg-light: #f8fafc;
+            --border-color: #cbd5e1;
+            --text-main: #334155;
+            --success: #16a34a;
+            --danger: #dc2626;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #e2e8f0; color: var(--text-main); line-height: 1.6; padding: 10px; }
+        .container { max-width: 850px; margin: 20px auto; background: #ffffff; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
+        
+        .header-area { text-align: center; margin-bottom: 40px; border-bottom: 3px solid var(--primary); padding-bottom: 20px; }
+        .header-area img { max-width: 220px; height: auto; margin-bottom: 15px; }
+        h1 { color: var(--secondary); font-size: 2.2em; margin-bottom: 8px; }
+        .subtitle { color: #64748b; font-size: 1.1em; }
+
+        /* Accordion Layout */
+        .accordion-item { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 15px; overflow: hidden; background: var(--bg-light); transition: all 0.3s ease; }
+        .accordion-item.active { border-color: var(--primary); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.1); background: #ffffff; }
+        .accordion-header { width: 100%; background: #f1f5f9; padding: 18px 25px; text-align: left; font-size: 1.2em; font-weight: 600; color: #475569; border: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .accordion-item.active .accordion-header { background: var(--primary); color: #ffffff; }
+        .accordion-header:disabled { cursor: not-allowed; opacity: 0.6; }
+        .accordion-content { padding: 30px; display: none; }
+        .accordion-item.active .accordion-content { display: block; }
+
+        .step-indicator { background: #cbd5e1; color: #475569; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 0.85em; margin-right: 12px; }
+        .accordion-item.active .step-indicator { background: #ffffff; color: var(--primary); }
+        .accordion-item.completed .step-indicator { background: var(--success); color: #ffffff; }
+
+        /* Controls */
+        .form-group { margin-bottom: 22px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: var(--secondary); }
+        
+        input[type="text"], input[type="email"], input[type="tel"], input[type="number"], input[type="date"], select, textarea {
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 1em; color: var(--text-main); background-color: #ffffff;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15); }
+        input[readonly] { background-color: #e2e8f0 !important; cursor: not-allowed; }
+
+        .radio-box-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 5px; }
+        .radio-box-label { flex: 1; min-width: 60px; border: 1px solid var(--border-color); padding: 12px; text-align: center; border-radius: 6px; cursor: pointer; background: #ffffff; font-weight: 500; }
+        .radio-box-group input[type="radio"] { display: none; }
+        .radio-box-group input[type="radio"]:checked + .radio-box-label { background: rgba(2, 132, 199, 0.1); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+
+        /* Compact Course Layout Design Rules */
+        .course-preview-card { 
+            display: none; 
+            background: #f8fafc; 
+            border: 1px solid #e2e8f0; 
+            border-radius: 10px; 
+            overflow: hidden; 
+            margin-top: 20px; 
+            animation: scaleReveal 0.3s cubic-bezier(0.16, 1, 0.3, 1); 
+        }
+        @media (min-width: 601px) {
+            .course-preview-card { grid-template-columns: 280px 1fr; }
+            .course-image-wrapper { height: 100%; }
+            .course-preview-card img { width: 100%; height: 100%; object-fit: cover; }
+        }
+        @media (max-width: 600px) {
+            .course-image-wrapper, .course-preview-card img { height: 160px; width: 100%; object-fit: cover; }
+        }
+
+        .course-preview-body { padding: 22px; }
+        .course-preview-body h3 { color: var(--secondary); font-size: 1.35em; margin-bottom: 8px; }
+        .course-preview-body p { font-size: 0.95em; color: #475569; margin-bottom: 18px; line-height: 1.5; }
+        .course-scope-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--primary); letter-spacing: 0.5px; margin-bottom: 10px; display: block; }
+        .course-skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; list-style: none; padding: 0; }
+        .course-skills-grid li { background: #ffffff; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 6px; font-size: 0.88rem; font-weight: 500; display: flex; align-items: center; gap: 8px; color: var(--secondary); }
+        .course-skills-grid li::before { content: "✓"; color: var(--success); font-weight: bold; }
+
+        .btn-next { background-color: var(--primary); color: white; border: none; padding: 14px 28px; font-size: 1em; font-weight: 600; border-radius: 6px; cursor: pointer; float: right; margin-top: 15px; }
+        .btn-next:hover { background-color: var(--primary-hover); }
+        
+        .submit-btn { width: 100%; background-color: var(--success); color: white; border: none; padding: 16px; font-size: 1.2em; font-weight: bold; border-radius: 8px; cursor: pointer; margin-top: 25px; display: flex; justify-content: center; align-items: center; gap: 12px; }
+        .submit-btn:disabled { background-color: #86efac; cursor: not-allowed; }
+
+        /* Modals style rules */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: none; justify-content: center; align-items: center; z-index: 1000; opacity: 0; transition: opacity 0.3s ease; }
+        .modal-box { background: #ffffff; padding: 25px; border-radius: 12px; max-width: 500px; width: 92%; text-align: center; }
+        .modal-box.danger-style { border-top: 6px solid var(--danger); }
+        .modal-box.success-style { border-top: 6px solid var(--success); }
+        .btn-modal-close { background: var(--secondary); color: white; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 15px; }
+
+        .loader { width: 20px; height: 20px; border: 3px solid #ffffff; border-bottom-color: transparent; border-radius: 50%; display: none; animation: rotation 1s linear infinite; }
+        #success-message { display: none; text-align: center; padding: 20px 0; }
+        .summary-box { background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; margin: 25px 0; text-align: left; }
+        .summary-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; }
+        .summary-item.highlight { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 12px; border-radius: 6px; color: #166534; font-weight: bold; }
+
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes scaleReveal { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+        @media (max-width: 600px) {
+            .form-row { grid-template-columns: 1fr; gap: 0; }
+            .accordion-header { padding: 15px; font-size: 1.05em; }
+            .btn-next { width: 100%; float: none; }
+            .course-skills-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-area" id="formHeader">
+            <img src="https://sozo.org.za/wp-content/uploads/2024/01/Sozo-Foundation-Logo.png" alt="Sozo Logo">
+            <h1>Skills Training Application</h1>
+            <p class="subtitle">Complete all registration panels to submit your details</p>
+        </div>
+
+        <form id="fullApplicationForm">
+            <div class="accordion-item active" id="section1">
+                <button type="button" class="accordion-header" id="headerButton1" onclick="toggleAccordion('section1')">
+                    <span><span class="step-indicator">1</span>Personal & Suburb Identification</span>
+                </button>
+                <div class="accordion-content">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name(s) <span style="color:red;">*</span></label>
+                            <input type="text" id="firstName" name="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Surname <span style="color:red;">*</span></label>
+                            <input type="text" id="lastName" name="lastName" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phoneInput">WhatsApp Contact Number <span style="color:red;">*</span></label>
+                            <input type="tel" id="phoneInput" name="contactNumber" placeholder="e.g., 0821234567" pattern="[0-9]{10}" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="emailInput">Email Address <span style="color:red;">*</span></label>
+                            <input type="email" id="emailInput" name="emailAddress" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="streetAddress">Street Address <span style="color:red;">*</span></label>
+                        <input type="text" id="streetAddress" name="streetAddress" placeholder="e.g., 25 Cascade Road" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="suburb">Suburb (Southern Suburbs Only) <span style="color:red;">*</span></label>
+                            <select id="suburb" name="suburb" required>
+                                <option value="">-- Choose Suburb --</option>
+                                <option value="Bergvliet">Bergvliet</option>
+                                <option value="Claremont">Claremont</option>
+                                <option value="Constantia">Constantia</option>
+                                <option value="Diep River">Diep River</option>
+                                <option value="Grassy Park">Grassy Park</option>
+                                <option value="Heathfield">Heathfield</option>
+                                <option value="Kenilworth">Kenilworth</option>
+                                <option value="Kirstenhof">Kirstenhof</option>
+                                <option value="Lakeside">Lakeside</option>
+                                <option value="Lotus River">Lotus River</option>
+                                <option value="Meadowridge">Meadowridge</option>
+                                <option value="Mowbray">Mowbray</option>
+                                <option value="Newlands">Newlands</option>
+                                <option value="Pelican Park">Pelican Park</option>
+                                <option value="Plumstead">Plumstead</option>
+                                <option value="Retreat">Retreat</option>
+                                <option value="Rondebosch">Rondebosch</option>
+                                <option value="Steenberg">Steenberg</option>
+                                <option value="Tokai">Tokai</option>
+                                <option value="Vrygrond">Vrygrond</option>
+                                <option value="Wynberg">Wynberg</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="postalCode">Postal Code <span style="color:red;">*</span></label>
+                            <input type="text" id="postalCode" name="postalCode" pattern="[0-9]{4}" placeholder="e.g., 7945" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Identification Type <span style="color:red;">*</span></label>
+                        <div class="radio-box-group">
+                            <input type="radio" id="typeSA" name="idType" value="SA ID" checked onclick="toggleIdType(this)">
+                            <label for="typeSA" class="radio-box-label">South African ID</label>
+                            <input type="radio" id="typePassport" name="idType" value="Passport" onclick="toggleIdType(this)">
+                            <label for="typePassport" class="radio-box-label">Foreign Passport</label>
+                        </div>
+                    </div>
+                    <div class="form-group" id="saIdGroup">
+                        <label for="idNumberInput">13-Digit SA ID Number <span style="color:red;">*</span></label>
+                        <input type="text" id="idNumberInput" name="saIdNumber" placeholder="e.g., 9901025123081" pattern="[0-9]{13}" required oninput="processSAID(this)">
+                    </div>
+                    <div id="passportGroup" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="passportNumberInput">Passport Number <span style="color:red;">*</span></label>
+                                <input type="text" id="passportNumberInput" name="passportNumber">
+                            </div>
+                            <div class="form-group">
+                                <label for="permitStatusInput">Valid Work Permit / Asylum? <span style="color:red;">*</span></label>
+                                <select id="permitStatusInput" name="hasPermit" onchange="togglePermit(this)">
+                                    <option value="">-- Select --</option>
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group" id="permitDetailsGroup" style="display:none;">
+                            <label for="permitDetails">Specify Permit Reference Details <span style="color:red;">*</span></label>
+                            <input type="text" id="permitDetails" name="permitDetails">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="dateOfBirthInput">Date of Birth <span style="color:red;">*</span></label>
+                            <input type="date" id="dateOfBirthInput" name="dateOfBirth" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="ageInput">Age (Calculated via ID) <span style="color:red;">*</span></label>
+                            <input type="number" id="ageInput" name="calculatedAge" readonly required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="genderInput">Gender <span style="color:red;">*</span></label>
+                        <select id="genderInput" name="gender" required>
+                            <option value="">-- Choose Option --</option>
+                            <option value="Female">Female</option>
+                            <option value="Male">Male</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn-next" onclick="goToNextSection(1)">Save & Continue ➔</button>
+                    <div style="clear:both;"></div>
+                </div>
+            </div>
+
+            <div class="accordion-item" id="section2">
+                <button type="button" class="accordion-header" id="headerButton2" disabled onclick="toggleAccordion('section2')" style="color: #94a3b8; border-left: 4px solid #cbd5e1;">
+                    <span><span class="step-indicator">2</span>Course Selection & Background</span>
+                </button>
+                <div class="accordion-content">
+                    <div class="form-group">
+                        <label for="educationInput">Highest Level of Schooling <span style="color:red;">*</span></label>
+                        <select id="educationInput" name="educationLevel" required>
+                            <option value="">-- Select --</option>
+                            <option value="Grade 9 or below">Grade 9 or below</option>
+                            <option value="Grade 10-11">Grade 10 or 11</option>
+                            <option value="Grade 12 / Matric">Grade 12 / Matric Certificate</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="programSelect">Select your primary Training Track School <span style="color:red;">*</span></label>
+                        <select id="programSelect" name="program" required onchange="displaySelectedCourseInfo(this)">
+                            <option value="">-- Select Track --</option>
+                            <option value="Artisan Baking">Artisan Baking School</option>
+                            <option value="Barista">Barista School</option>
+                            <option value="Hair">Hairdressing School</option>
+                            <option value="Beauty">Beauty School</option>
+                        </select>
+                    </div>
+
+                    <div class="course-preview-card" id="coursePreviewBox">
+                        <div class="course-image-wrapper">
+                            <img id="coursePreviewImg" src="" alt="Track Graphics Banner">
+                        </div>
+                        <div class="course-preview-body">
+                            <h3 id="coursePreviewTitle">Course Title</h3>
+                            <p id="coursePreviewDesc">Description information panel text layout.</p>
+                            <span class="course-scope-label">What you will learn in this track:</span>
+                            <ul class="course-skills-grid" id="courseSkillsGrid"></ul>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top:25px;">
+                        <label for="constructionSelect">Have you ever done informal construction or painting work? <span style="color:red;">*</span></label>
+                        <select id="constructionSelect" name="constructionExperience" onchange="toggleConstruction(this)">
+                            <option value="No">No experience</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="constructionDetailsGroup" style="display:none;">
+                        <label for="constructionDetails">Briefly list your building/construction experience <span style="color:red;">*</span></label>
+                        <textarea id="constructionDetails" name="constructionDetails" rows="2"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="disabilitySelect">Do you live with any diagnosed physical disabilities? <span style="color:red;">*</span></label>
+                        <select id="disabilitySelect" name="hasDisability" required onchange="toggleDisability(this)">
+                            <option value="No">No</option>
+                            <option value="Yes">Yes</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="disabilityTypeGroup" style="display:none;">
+                        <label for="disabilityDetails">Please describe accommodations required <span style="color:red;">*</span></label>
+                        <textarea id="disabilityDetails" name="disabilityDetails" rows="2"></textarea>
+                    </div>
+                    <button type="button" class="btn-next" onclick="goToNextSection(2)">Save & Continue ➔</button>
+                    <div style="clear:both;"></div>
+                </div>
+            </div>
+
+            <div class="accordion-item" id="section3">
+                <button type="button" class="accordion-header" id="headerButton3" disabled onclick="toggleAccordion('section3')" style="color: #94a3b8; border-left: 4px solid #cbd5e1;">
+                    <span><span class="step-indicator">3</span>Baseline Performance Evaluation</span>
+                </button>
+                <div class="accordion-content">
+                    <p style="margin-bottom: 20px; color:#64748b;">Rate yourself objectively from 1 (Low) to 5 (Expert).</p>
+                    
+                    <div class="form-group"><label>1. Technical Aptitude: Comfort with tool systems? *</label><div class="radio-box-group"><input type="radio" id="tk1" name="technicalKnowledge" value="1" required><label for="tk1" class="radio-box-label">1</label><input type="radio" id="tk2" name="technicalKnowledge" value="2"><label for="tk2" class="radio-box-label">2</label><input type="radio" id="tk3" name="technicalKnowledge" value="3" checked><label for="tk3" class="radio-box-label">3</label><input type="radio" id="tk4" name="technicalKnowledge" value="4"><label for="tk4" class="radio-box-label">4</label><input type="radio" id="tk5" name="technicalKnowledge" value="5"><label for="tk5" class="radio-box-label">5</label></div></div>
+                    <div class="form-group"><label>2. Rule Compliance: Safe operating standard guidelines? *</label><div class="radio-box-group"><input type="radio" id="fi1" name="followInstructions" value="1" required><label for="fi1" class="radio-box-label">1</label><input type="radio" id="fi2" name="followInstructions" value="2"><label for="fi2" class="radio-box-label">2</label><input type="radio" id="fi3" name="followInstructions" value="3" checked><label for="fi3" class="radio-box-label">3</label><input type="radio" id="fi4" name="followInstructions" value="4"><label for="fi4" class="radio-box-label">4</label><input type="radio" id="fi5" name="followInstructions" value="5"><label for="fi5" class="radio-box-label">5</label></div></div>
+                    <div class="form-group"><label>3. Punctuality Management: Arriving on time every day? *</label><div class="radio-box-group"><input type="radio" id="tm1" name="timeManagement" value="1" required><label for="tm1" class="radio-box-label">1</label><input type="radio" id="tm2" name="timeManagement" value="2"><label for="tm2" class="radio-box-label">2</label><input type="radio" id="tm3" name="timeManagement" value="3" checked><label for="tm3" class="radio-box-label">3</label><input type="radio" id="tm4" name="timeManagement" value="4"><label for="tm4" class="radio-box-label">4</label><input type="radio" id="tm5" name="timeManagement" value="5"><label for="tm5" class="radio-box-label">5</label></div></div>
+                    <div class="form-group"><label>4. Interpersonal Collaboration: Group/Team project communication? *</label><div class="radio-box-group"><input type="radio" id="tw1" name="teamwork" value="1" required><label for="tw1" class="radio-box-label">1</label><input type="radio" id="tw2" name="teamwork" value="2"><label for="tw2" class="radio-box-label">2</label><input type="radio" id="tw3" name="teamwork" value="3" checked><label for="tw3" class="radio-box-label">3</label><input type="radio" id="tw4" name="teamwork" value="4"><label for="tw4" class="radio-box-label">4</label><input type="radio" id="tw5" name="teamwork" value="5"><label for="tw5" class="radio-box-label">5</label></div></div>
+                    <div class="form-group"><label>5. Client Demeanour: Professional interaction style? *</label><div class="radio-box-group"><input type="radio" id="cc1" name="customerCommunication" value="1" required><label for="cc1" class="radio-box-label">1</label><input type="radio" id="cc2" name="customerCommunication" value="2"><label for="cc2" class="radio-box-label">2</label><input type="radio" id="cc3" name="customerCommunication" value="3" checked><label for="cc3" class="radio-box-label">3</label><input type="radio" id="cc4" name="customerCommunication" value="4"><label for="cc4" class="radio-box-label">4</label><input type="radio" id="cc5" name="customerCommunication" value="5"><label for="cc5" class="radio-box-label">5</label></div></div>
+                    <div class="form-group"><label>6. Continuous Learning: Seeking assistance when stuck? *</label><div class="radio-box-group"><input type="radio" id="ah1" name="askingHelp" value="1" required><label for="ah1" class="radio-box-label">1</label><input type="radio" id="ah2" name="askingHelp" value="2"><label for="ah2" class="radio-box-label">2</label><input type="radio" id="ah3" name="askingHelp" value="3" checked><label for="ah3" class="radio-box-label">3</label><input type="radio" id="ah4" name="askingHelp" value="4"><label for="ah4" class="radio-box-label">4</label><input type="radio" id="ah5" name="askingHelp" value="5"><label for="ah5" class="radio-box-label">5</label></div></div>
+                    <div class="form-group"><label>7. Social Media Basics: For product marketing display? *</label><div class="radio-box-group"><input type="radio" id="sm1" name="socialMedia" value="1" required><label for="sm1" class="radio-box-label">1</label><input type="radio" id="sm2" name="socialMedia" value="2"><label for="sm2" class="radio-box-label">2</label><input type="radio" id="sm3" name="socialMedia" value="3" checked><label for="sm3" class="radio-box-label">3</label><input type="radio" id="sm4" name="socialMedia" value="4"><label for="sm4" class="radio-box-label">4</label><input type="radio" id="sm5" name="socialMedia" value="5"><label for="sm5" class="radio-box-label">5</label></div></div>
+                    <div class="form-group"><label>8. Career Focus Importance: Intentional placement readiness? *</label><div class="radio-box-group"><input type="radio" id="ei1" name="employmentImportance" value="1" required><label for="ei1" class="radio-box-label">1</label><input type="radio" id="ei2" name="employmentImportance" value="2"><label for="ei2" class="radio-box-label">2</label><input type="radio" id="ei3" name="employmentImportance" value="3" checked><label for="ei3" class="radio-box-label">3</label><input type="radio" id="ei4" name="employmentImportance" value="4"><label for="ei4" class="radio-box-label">4</label><input type="radio" id="ei5" name="employmentImportance" value="5"><label for="ei5" class="radio-box-label">5</label></div></div>
+                    <div class="form-group"><label>9. Program Dedication: Commitment to graduate the course? *</label><div class="radio-box-group"><input type="radio" id="cm1" name="commitment" value="1" required><label for="cm1" class="radio-box-label">1</label><input type="radio" id="cm2" name="commitment" value="2"><label for="cm2" class="radio-box-label">2</label><input type="radio" id="cm3" name="commitment" value="3" checked><label for="cm3" class="radio-box-label">3</label><input type="radio" id="cm4" name="commitment" value="4"><label for="cm4" class="radio-box-label">4</label><input type="radio" id="cm5" name="commitment" value="5"><label for="cm5" class="radio-box-label">5</label></div></div>
+
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span id="btn-text">Submit Registration Profile</span>
+                        <div class="loader" id="loader"></div>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        <div id="success-message">
+            <h2 style="font-size: 2.3em; margin-bottom: 10px; color: var(--success);">Application Uploaded! 🎉</h2>
+            <div class="summary-box">
+                <div class="summary-item highlight"><span class="summary-label">Tracking ID Reference:</span><span class="summary-value" id="finalId"></span></div>
+                <div class="summary-item"><span class="summary-label">Applicant Name:</span><span class="summary-value" id="finalName"></span></div>
+                <div class="summary-item"><span class="summary-label">Designated Suburb:</span><span class="summary-value" id="finalSuburb"></span></div>
+                <div class="summary-item"><span class="summary-label">Course Track:</span><span class="summary-value" id="finalProgram"></span></div>
+                <div class="summary-item"><span class="summary-label">Baseline Score Matrix:</span><span class="summary-value" id="finalScore"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="ineligibleModal">
+        <div class="modal-box danger-style">
+            <h2 style="color: var(--danger);">Age Target Warning ⚠️</h2>
+            <p id="ineligibleAgeDisplay" style="font-weight: bold; margin-bottom:10px;"></p>
+            <p>Our core vocational tracks are structurally reserved for young adults aged **20 to 35**.</p>
+            <button type="button" class="btn-modal-close" onclick="closeModal('ineligibleModal')">Review Input Data</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="idSuccessModal">
+        <div class="modal-box success-style">
+            <h2 style="color: var(--success);">Save Your Application ID Code!</h2>
+            <div style="background: #f0fdf4; border: 2px dashed var(--success); font-size: 1.5em; font-weight: bold; padding: 12px; margin: 20px 0; color: #15803d;" id="popUpIdDisplay"></div>
+            <p>Use this unique key in the Lookup Dashboard to trace verification states natively.</p>
+            <button type="button" class="btn-modal-close" style="background: var(--success);" onclick="closeModal('idSuccessModal')">Finish Process</button>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmBKtZ4JntlkFYNTdjomIXwWHjTHWUDt-0yLEPghf67qfDwyMhRcTClMF0tHaf_PHM/exec'; 
+
+        const courseInformationData = {
+            "Barista": {
+                title: "Barista School",
+                img: "https://sozo.org.za/wp-content/uploads/2024/02/Sozo-Website-Portrait-Photos-800-x-900-px.webp",
+                desc: "The Sozo Barista School is dedicated to the art and science of coffee preparation. This programme immerses students in the world of speciality coffee, teaching them how to brew the perfect cup and master the techniques of espresso-based beverages. From bean selection to latte art, our Barista School cultivates the skills required to excel in the vibrant coffee culture.",
+                modules: ["History of coffee", "How to roast coffee beans", "Pulling the perfect shot of espresso", "Theory of espresso-based drinks", "How to grind coffee beans", "Latte art"]
+            },
+            "Artisan Baking": {
+                title: "Baking School",
+                img: "https://sozo.org.za/wp-content/uploads/2024/02/Sozo-Foundation-Skills-Training-Programmes-2.webp",
+                desc: "The Sozo Baking School is a programme designed to equip students with the essential skills and knowledge required for a successful career in baking and pastry arts. Participants in this school receive hands-on training in baking techniques, cake decoration, and confectionery production.",
+                modules: ["Artisanal Baking", "Baking Using A Wood Burning Oven", "Pastries", "Making Quality Baked Goods", "Baking With High-Quality, Locally-Sourced Ingredients", "Confident Bakers"]
+            },
+            "Beauty": {
+                title: "Beauty School",
+                img: "https://sozo.org.za/wp-content/uploads/2024/02/Sozo-Foundation-Skills-Training-Programmes-4.webp",
+                desc: "The Sozo Beauty School focuses on the field of beauty therapy and cosmetics. Students in this programme receive training in skincare, makeup artistry, and spa treatments. Our curriculum emphasises a holistic approach to beauty, understanding both the science of skincare and the artistry of makeup application.",
+                modules: ["Massage Therapy", "Make-Up Artistry", "Nail Technician Training In Treatments & Nail Art"]
+            },
+            "Hair": {
+                title: "Hairdressing School",
+                img: "https://sozo.org.za/wp-content/uploads/2024/02/Sozo-Foundation-Skills-Training-Programmes-3.webp",
+                desc: "The Sozo Hairdressing School is a dynamic programme that trains individuals in the art of hair care and styling. Students learn the latest hairstyling techniques, hair cutting, colouring, and salon management.",
+                modules: ["Washing Hair", "Blow Drying", "Hair Colouring", "Hair Cutting", "Quality Products & Styling Treatments", "Hair Straightening"]
+            }
+        };
+
+        function displaySelectedCourseInfo(selectElement) {
+            const chosenValue = selectElement.value;
+            const previewBox = document.getElementById('coursePreviewBox');
+            const previewImg = document.getElementById('coursePreviewImg');
+            const previewTitle = document.getElementById('coursePreviewTitle');
+            const previewDesc = document.getElementById('coursePreviewDesc');
+            const skillsGrid = document.getElementById('courseSkillsGrid');
+
+            if (!chosenValue || !courseInformationData[chosenValue]) { previewBox.style.display = 'none'; return; }
+            const course = courseInformationData[chosenValue];
+
+            previewImg.src = course.img;
+            previewImg.alt = `Operational banner representation for ${course.title}`;
+            previewTitle.textContent = course.title;
+            previewDesc.textContent = course.desc;
+
+            skillsGrid.innerHTML = '';
+            course.modules.forEach(moduleText => {
+                const li = document.createElement('li');
+                li.textContent = moduleText;
+                skillsGrid.appendChild(li);
+            });
+
+            previewBox.style.display = (window.innerWidth > 600) ? 'grid' : 'block';
+        }
+        
+        window.addEventListener('resize', () => {
+            const selectEl = document.getElementById('programSelect');
+            if(selectEl && selectEl.value) displaySelectedCourseInfo(selectEl);
+        });
+
+        function closeModal(id) { document.getElementById(id).style.opacity = '0'; setTimeout(() => { document.getElementById(id).style.display = 'none'; }, 300); }
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; setTimeout(() => { document.getElementById(id).style.opacity = '1'; }, 10); }
+        
+        function validateAgeBoundaries(val) {
+            const age = parseInt(val, 10);
+            if (!isNaN(age) && (age < 20 || age > 35)) {
+                document.getElementById('ineligibleAgeDisplay').textContent = `Entered Age: ${age} Years Old`;
+                openModal('ineligibleModal'); return false;
+            }
+            return true;
+        }
+        function toggleAccordion(id, force = false) {
+            const target = document.getElementById(id);
+            if (!target || (!force && target.querySelector('.accordion-header').hasAttribute('disabled'))) return;
+            document.querySelectorAll('.accordion-item').forEach(el => el.classList.remove('active'));
+            if (force || !target.classList.contains('active')) target.classList.add('active');
+        }
+        function validateSection(num) {
+            const section = document.getElementById(`section${num}`);
+            let valid = true;
+            section.querySelectorAll('input, select, textarea').forEach(f => {
+                if(f.hasAttribute('required') && !f.closest('[style*="display: none"]') && !f.value.trim()) { valid = false; f.reportValidity(); }
+            });
+            if (num === 1 && valid) valid = validateAgeBoundaries(document.getElementById('ageInput').value);
+            return valid;
+        }
+        function goToNextSection(curr) {
+            if (validateSection(curr)) {
+                document.getElementById(`section${curr}`).classList.add('completed');
+                const nextBtn = document.getElementById(`headerButton${curr + 1}`);
+                if (nextBtn) { nextBtn.disabled = false; nextBtn.parentElement.style.borderLeftColor = ''; }
+                toggleAccordion(`section${curr + 1}`, true);
+            }
+        }
+        function toggleIdType(rad) {
+            const isSA = rad.value === 'SA ID';
+            document.getElementById('saIdGroup').style.display = isSA ? 'block' : 'none';
+            document.getElementById('passportGroup').style.display = isSA ? 'none' : 'block';
+            document.getElementById('idNumberInput').toggleAttribute('required', isSA);
+            document.getElementById('passportNumberInput').toggleAttribute('required', !isSA);
+            document.getElementById('permitStatusInput').toggleAttribute('required', !isSA);
+        }
+        function togglePermit(sel) {
+            const show = sel.value === 'Yes';
+            document.getElementById('permitDetailsGroup').style.display = show ? 'block' : 'none';
+            document.getElementById('permitDetails').toggleAttribute('required', show);
+        }
+        function toggleConstruction(sel) { document.getElementById('constructionDetailsGroup').style.display = sel.value === 'Yes' ? 'block' : 'none'; }
+        function toggleDisability(sel) { document.getElementById('disabilityTypeGroup').style.display = sel.value === 'Yes' ? 'block' : 'none'; }
+
+        function processSAID(el) {
+            const str = el.value.trim(); if (str.length !== 13 || !/^\d+$/.test(str)) return;
+            const yy = str.substring(0, 2), mm = str.substring(2, 4), dd = str.substring(4, 6);
+            const currentYear = new Date().getFullYear();
+            let fullYear = 1900 + parseInt(yy, 10); if (fullYear + 100 <= currentYear) fullYear += 100;
+            
+            document.getElementById('dateOfBirthInput').value = `${fullYear}-${mm}-${dd}`;
+            let age = currentYear - fullYear;
+            document.getElementById('ageInput').value = age;
+            validateAgeBoundaries(age);
+        }
+
+        document.getElementById('fullApplicationForm').addEventListener('submit', function(e) {
+            e.preventDefault(); if (!validateSection(1) || !validateSection(2) || !validateSection(3)) return;
+            
+            const btn = document.getElementById('submitBtn'), loader = document.getElementById('loader'), txt = document.getElementById('btn-text');
+            btn.disabled = true; loader.style.display = 'inline-block'; txt.textContent = 'Uploading profile...';
+            
+            const fd = new FormData(this);
+            let score = 0; ['technicalKnowledge', 'followInstructions', 'timeManagement', 'teamwork', 'customerCommunication', 'askingHelp', 'socialMedia', 'employmentImportance', 'commitment'].forEach(k => { score += parseInt(fd.get(k) || 0, 10); });
+            fd.append('baselineScore', score);
+            
+            const trackingId = `SZ-${fd.get('firstName').substring(0,2).toUpperCase()}-${new Date().getFullYear()}-${Date.now().toString().slice(-4)}`;
+            fd.append('applicationId', trackingId);
+            
+            const obj = {}; fd.forEach((v, k) => { obj[k] = v; });
+            
+            fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(obj) })
+            .then(() => {
+                document.getElementById('formHeader').style.display = 'none'; this.style.display = 'none';
+                document.getElementById('finalName').textContent = `${obj.firstName} ${obj.lastName}`;
+                document.getElementById('finalSuburb').textContent = obj.suburb;
+                document.getElementById('finalProgram').textContent = obj.program;
+                document.getElementById('finalScore').textContent = `${score} / 45 Points`;
+                document.getElementById('finalId').textContent = trackingId;
+                document.getElementById('popUpIdDisplay').textContent = trackingId;
+                openModal('idSuccessModal');
+                document.getElementById('success-message').style.display = 'block';
+            })
+            .catch(() => { alert('Network transaction breakdown occurred.'); })
+            .finally(() => { btn.disabled = false; loader.style.display = 'none'; txt.textContent = 'Submit Registration Profile'; });
+        });
+    </script>
+</body>
+</html>
